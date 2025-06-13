@@ -231,7 +231,6 @@ export class GithubOauth {
     'Issues',
     'Commits',
     'ChangeLogs',
-    'Users',
   ];
 
   selectedIntegration = 'github';
