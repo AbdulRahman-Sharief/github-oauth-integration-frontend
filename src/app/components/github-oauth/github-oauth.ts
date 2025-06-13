@@ -268,6 +268,47 @@ export class GithubOauth {
         }
       );
   }
+
+  loadAllRepos() {
+    this.loading = true;
+    this.http
+      .get<{ organizations: any[] }>(
+        `http://localhost:3000/api/v1/organizations?userId=${this.userData?.id}`
+      )
+      .subscribe(
+        ({ organizations }) => {
+          let remaining = this.organizations.length;
+          this.organizations.forEach((org) => {
+            this.http
+              .get<{ repos: any[] }>(
+                `http://localhost:3000/api/v1/organizations/repositories?organizationId=${org._id}&userId=${this.userData?.id}`
+              )
+              .subscribe(
+                ({ repos }) => {
+                  repos.forEach((repo) => {
+                    repo.organization = org.login;
+                    repo.included = false;
+                    repo.repo = `https://github.com/${repo.fullName}`;
+                  });
+                  this.repos.push(...repos);
+                  if (--remaining === 0) {
+                    this.rowData.set([...this.repos]);
+                    this.loading = false;
+                  }
+                },
+                (error) => {
+                  console.error('Error fetching repos:', error);
+                  if (--remaining === 0) this.loading = false;
+                }
+              );
+          });
+        },
+        (error) => {
+          console.error('Error fetching organizations:', error);
+          this.loading = false;
+        }
+      );
+  }
   onEntityChange(event: any) {
     // Fetch new data based on selectedEntity
     // this.fetchDataForEntity(this.selectedEntity);
@@ -280,7 +321,7 @@ export class GithubOauth {
         this.loadAllOrganizations();
         break;
       case 'Repos':
-        this.loadRepos();
+        this.loadAllRepos();
         break;
       // Add cases for other entities
       default:
