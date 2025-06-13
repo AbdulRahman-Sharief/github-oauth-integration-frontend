@@ -17,16 +17,49 @@
   color: #303f9f !important;
 }
 
-// .title {
-//   color: #1a0dab;
-//   font-weight: bold;
-//   font-size: 20px;
-// }
-// .subtitle {
-//   color: #6c757d;
-//   font-size: 16px;
-// }
-// .icon {
-//   color: #1a0dab;
-//   margin-left: 5px;
-// }
+.card {
+  border-radius: 0.5rem;
+}
+
+.card-footer {
+  background-color: white;
+  border-top: none;
+}
+
+.admin-sync {
+  display: flex;
+  flex-direction: column;
+  font-size: x-small;
+}
+
+.sync-type {
+  align-self: flex-end;
+}
+
+.success-tick {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #5ee15e;
+  border-radius: 50%;
+  background-color: #5ee15e;
+  color: white;
+  font-size: 16px;
+  margin-left: 0.3rem;
+}
+
+.title {
+  color: #1a0dab;
+  font-weight: bold;
+  font-size: 20px;
+}
+.subtitle {
+  color: #6c757d;
+  font-size: 16px;
+}
+.icon {
+  color: #1a0dab;
+  margin-left: 5px;
+}

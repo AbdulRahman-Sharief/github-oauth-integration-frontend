@@ -95,19 +95,23 @@ export class GithubOauth {
       if (userId) {
         this.authService.checkAuthStatus(userId).subscribe(
           (response) => {
+            console.log('Auth status response:', response);
             this.isAuthenticated = response.isAuthenticated;
             this.userData = response.user;
             if (this.isAuthenticated) {
               this.loadOrganizations();
             }
+            return;
           },
           (error) => {
-            console.error('Error checking auth status:', error);
+            console.error('Error checking auth status:', error.message);
             this.isAuthenticated = false;
+            return;
           }
         );
       } else {
         this.isAuthenticated = false;
+        return;
       }
     });
   }
