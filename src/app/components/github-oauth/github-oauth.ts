@@ -309,6 +309,92 @@ export class GithubOauth {
         }
       );
   }
+  loadAllCommits() {
+    this.loading = true;
+    this.http
+      .get<{ organizations: any[] }>(
+        `http://localhost:3000/api/v1/organizations?userId=${this.userData?.id}`
+      )
+      .subscribe(
+        ({ organizations }) => {
+          this.organizations = organizations;
+          let remainingOrgs = organizations.length;
+
+          const allRepos: any[] = [];
+          const allCommits: any[] = [];
+
+          organizations.forEach((org) => {
+            this.http
+              .get<{ repos: any[] }>(
+                `http://localhost:3000/api/v1/organizations/repositories?organizationId=${org._id}&userId=${this.userData?.id}`
+              )
+              .subscribe(
+                ({ repos }) => {
+                  repos.forEach((repo) => {
+                    repo.organization = org.login;
+                    repo.included = false;
+                    repo.repo = `https://github.com/${repo.fullName}`;
+                  });
+
+                  allRepos.push(...repos);
+
+                  if (--remainingOrgs === 0) {
+                    // After fetching all repos from all orgs, fetch commits
+                    let remainingRepos = allRepos.length;
+
+                    if (remainingRepos === 0) {
+                      this.rowData.set([]);
+                      this.loading = false;
+                      return;
+                    }
+
+                    allRepos.forEach((repo) => {
+                      this.http
+                        .get<{ commits: any[] }>(
+                          `http://localhost:3000/api/v1/repositories/commits?userId=${this.userData?.id}&repoId=${repo._id}`
+                        )
+                        .subscribe(
+                          ({ commits }: any) => {
+                            if (commits?.length) {
+                              allCommits.push(...commits);
+                            }
+
+                            if (--remainingRepos === 0) {
+                              this.rowData.set(allCommits);
+                              this.displayedColumns.set(
+                                Object.keys(allCommits[0] || [])
+                              );
+                              this.loading = false;
+                            }
+                          },
+                          (error) => {
+                            console.error(
+                              `Error fetching commits for repo ${repo._id}:`,
+                              error
+                            );
+                            if (--remainingRepos === 0) {
+                              this.rowData.set(allCommits);
+                              this.loading = false;
+                            }
+                          }
+                        );
+                    });
+                  }
+                },
+                (error) => {
+                  console.error('Error fetching repos:', error);
+                  if (--remainingOrgs === 0) this.loading = false;
+                }
+              );
+          });
+        },
+        (error) => {
+          console.error('Error fetching organizations:', error);
+          this.loading = false;
+        }
+      );
+  }
+
   onEntityChange(event: any) {
     // Fetch new data based on selectedEntity
     // this.fetchDataForEntity(this.selectedEntity);
@@ -323,7 +409,9 @@ export class GithubOauth {
       case 'Repos':
         this.loadAllRepos();
         break;
-      // Add cases for other entities
+      case 'Commits':
+        this.loadAllCommits();
+        break;
       default:
         this.dataSource.data = []; // fallback
     }
