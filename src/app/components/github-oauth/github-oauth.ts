@@ -230,7 +230,7 @@ export class GithubOauth {
     'PullRequests',
     'Issues',
     'Commits',
-    'ChangeLogs',
+    // 'ChangeLogs',
   ];
 
   selectedIntegration = 'github';
@@ -564,91 +564,135 @@ export class GithubOauth {
       );
   }
 
-  loadAllChangeLogs() {
-    this.loading = true;
-    this.http
-      .get<{ organizations: any[] }>(
-        `http://localhost:3000/api/v1/organizations?userId=${this.userData?.id}`
-      )
-      .subscribe(
-        ({ organizations }) => {
-          this.organizations = organizations;
-          let remainingOrgs = organizations.length;
+  // loadAllChangeLogs() {
+  //   this.loading = true;
+  //   this.http
+  //     .get<{ organizations: any[] }>(
+  //       `http://localhost:3000/api/v1/organizations?userId=${this.userData?.id}`
+  //     )
+  //     .subscribe(
+  //       ({ organizations }) => {
+  //         this.organizations = organizations;
+  //         let remainingOrgs = organizations.length;
 
-          const allRepos: any[] = [];
-          const allIssues: any[] = [];
+  //         const allRepos: any[] = [];
+  //         const allIssues: any[] = [];
+  //         const allChangeLogs: any[] = [];
 
-          organizations.forEach((org) => {
-            this.http
-              .get<{ repos: any[] }>(
-                `http://localhost:3000/api/v1/organizations/repositories?organizationId=${org._id}&userId=${this.userData?.id}`
-              )
-              .subscribe(
-                ({ repos }) => {
-                  repos.forEach((repo) => {
-                    repo.organization = org.login;
-                    repo.included = false;
-                    repo.repo = `https://github.com/${repo.fullName}`;
-                  });
+  //         organizations.forEach((org) => {
+  //           this.http
+  //             .get<{ repos: any[] }>(
+  //               `http://localhost:3000/api/v1/organizations/repositories?organizationId=${org._id}&userId=${this.userData?.id}`
+  //             )
+  //             .subscribe(
+  //               ({ repos }) => {
+  //                 repos.forEach((repo) => {
+  //                   repo.organization = org.login;
+  //                   repo.included = false;
+  //                   repo.repo = `https://github.com/${repo.fullName}`;
+  //                 });
 
-                  allRepos.push(...repos);
+  //                 allRepos.push(...repos);
 
-                  if (--remainingOrgs === 0) {
-                    // After fetching all repos from all orgs, fetch commits
-                    let remainingRepos = allRepos.length;
+  //                 if (--remainingOrgs === 0) {
+  //                   let remainingRepos = allRepos.length;
+  //                   if (remainingRepos === 0) {
+  //                     this.rowData.set([]);
+  //                     this.loading = false;
+  //                     return;
+  //                   }
 
-                    if (remainingRepos === 0) {
-                      this.rowData.set([]);
-                      this.loading = false;
-                      return;
-                    }
+  //                   allRepos.forEach((repo) => {
+  //                     this.http
+  //                       .get<{ issues: any[] }>(
+  //                         `http://localhost:3000/api/v1/repositories/issues?userId=${this.userData?.id}&repoId=${repo._id}`
+  //                       )
+  //                       .subscribe(
+  //                         ({ issues }) => {
+  //                           issues = issues || [];
+  //                           allIssues.push(
+  //                             ...issues.map((i) => ({
+  //                               ...i,
+  //                               repoId: repo._id,
+  //                             }))
+  //                           );
 
-                    allRepos.forEach((repo) => {
-                      this.http
-                        .get<{ issues: any[] }>(
-                          `http://localhost:3000/api/v1/repositories/issues?userId=${this.userData?.id}&repoId=${repo._id}`
-                        )
-                        .subscribe(
-                          ({ issues }: any) => {
-                            if (issues?.length) {
-                              allIssues.push(...issues);
-                            }
+  //                           if (--remainingRepos === 0) {
+  //                             const totalIssues = allIssues.length;
+  //                             if (totalIssues === 0) {
+  //                               this.rowData.set([]);
+  //                               this.loading = false;
+  //                               return;
+  //                             }
 
-                            if (--remainingRepos === 0) {
-                              this.rowData.set(allIssues);
-                              this.displayedColumns.set(
-                                Object.keys(allIssues[0] || [])
-                              );
-                              this.loading = false;
-                            }
-                          },
-                          (error) => {
-                            console.error(
-                              `Error fetching commits for repo ${repo._id}:`,
-                              error
-                            );
-                            if (--remainingRepos === 0) {
-                              this.rowData.set(allIssues);
-                              this.loading = false;
-                            }
-                          }
-                        );
-                    });
-                  }
-                },
-                (error) => {
-                  console.error('Error fetching repos:', error);
-                  if (--remainingOrgs === 0) this.loading = false;
-                }
-              );
-          });
-        },
-        (error) => {
-          console.error('Error fetching organizations:', error);
-          this.loading = false;
-        }
-      );
-  }
+  //                             let remainingChangelogIssues = totalIssues;
+
+  //                             allIssues.forEach((issue) => {
+  //                               this.http
+  //                                 .get<{ changeLogs: any[] }>(
+  //                                   `http://localhost:3000/api/v1/repositories/issues/changelogs?userId=${this.userData?.id}&repoId=${issue.repoId}&issueNumber=${issue.number}`
+  //                                 )
+  //                                 .subscribe(
+  //                                   ({ changeLogs }) => {
+  //                                     if (changeLogs?.length) {
+  //                                       allChangeLogs.push(...changeLogs);
+  //                                     }
+
+  //                                     if (--remainingChangelogIssues === 0) {
+  //                                       this.rowData.set([...allChangeLogs]);
+  //                                       this.displayedColumns.set(
+  //                                         Object.keys(allChangeLogs[0] || {})
+  //                                       );
+  //                                       this.loading = false;
+  //                                     }
+  //                                     console.log(allChangeLogs);
+  //                                     console.log(this.rowData());
+  //                                     console.log(this.displayedColumns());
+  //                                   },
+  //                                   (error) => {
+  //                                     console.error(
+  //                                       `Error fetching changelogs for issue ${issue._id}:`,
+  //                                       error
+  //                                     );
+  //                                     if (--remainingChangelogIssues === 0) {
+  //                                       this.rowData.set([...allChangeLogs]);
+  //                                       this.displayedColumns.set(
+  //                                         Object.keys(allChangeLogs[0] || {})
+  //                                       );
+  //                                       this.loading = false;
+  //                                     }
+  //                                   }
+  //                                 );
+  //                             });
+  //                           }
+  //                         },
+  //                         (error) => {
+  //                           console.error(
+  //                             `Error fetching issues for repo ${repo._id}:`,
+  //                             error
+  //                           );
+  //                           if (--remainingRepos === 0) {
+  //                             this.rowData.set([]);
+  //                             this.loading = false;
+  //                           }
+  //                         }
+  //                       );
+  //                   });
+  //                 }
+  //               },
+  //               (error) => {
+  //                 console.error('Error fetching repos:', error);
+  //                 if (--remainingOrgs === 0) this.loading = false;
+  //               }
+  //             );
+  //         });
+  //       },
+  //       (error) => {
+  //         console.error('Error fetching organizations:', error);
+  //         this.loading = false;
+  //       }
+  //     );
+  // }
 
   loadAllOrganizationMembers() {
     this.loading = true;
@@ -714,9 +758,9 @@ export class GithubOauth {
       case 'PullRequests':
         this.loadAllPullRequests();
         break;
-      case 'ChangeLogs':
-        this.loadAllChangeLogs();
-        break;
+      // case 'ChangeLogs':
+      //   this.loadAllChangeLogs();
+      //   break;
       case 'OrganizationMembers':
         this.loadAllOrganizationMembers();
         break;
