@@ -261,6 +261,7 @@ export class GithubOauth {
               };
             }),
           ]);
+          this.dataSource.paginator = this.paginator;
 
           this.loading = false;
         },
@@ -297,6 +298,7 @@ export class GithubOauth {
                   if (--remaining === 0) {
                     this.rowData.set([...allRepos]);
                     this.displayedColumns.set(Object.keys(allRepos[0] || []));
+                    this.dataSource.paginator = this.paginator;
                     this.loading = false;
                   }
                 },
@@ -454,6 +456,7 @@ export class GithubOauth {
                               this.displayedColumns.set(
                                 Object.keys(allIssues[0] || [])
                               );
+                              this.dataSource.paginator = this.paginator;
                               this.loading = false;
                             }
                           },
@@ -539,6 +542,7 @@ export class GithubOauth {
                               this.displayedColumns.set(
                                 Object.keys(allPRs[0] || [])
                               );
+                              this.dataSource.paginator = this.paginator;
                               this.loading = false;
                             }
                           },
@@ -725,6 +729,7 @@ export class GithubOauth {
                   if (--remaining === 0) {
                     this.rowData.set([...allMembers]);
                     this.displayedColumns.set(Object.keys(allMembers[0] || []));
+                    this.dataSource.paginator = this.paginator;
                     this.loading = false;
                   }
                 },
