@@ -88,12 +88,6 @@
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
-
-        <!-- Optional Pagination -->
-        <mat-paginator
-          [pageSizeOptions]="[5, 10, 20]"
-          showFirstLastButtons
-        ></mat-paginator>
       </div>
     </div>
 
@@ -101,7 +95,11 @@
       *ngIf="!loading && isAuthenticated"
       [userData]="userStats"
     ></app-user-stats>
-
+    <!-- Optional Pagination -->
+    <mat-paginator
+      [pageSizeOptions]="[5, 10, 20]"
+      showFirstLastButtons
+    ></mat-paginator>
     <div class="d-flex justify-content-end" *ngIf="isAuthenticated">
       <button class="btn btn-indigo mt-3" (click)="removeGithub()">
         Remove
