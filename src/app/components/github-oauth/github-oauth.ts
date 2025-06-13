@@ -1,4 +1,11 @@
-import { Component, ViewChild, signal, effect, computed } from '@angular/core';
+import {
+  Component,
+  ViewChild,
+  signal,
+  effect,
+  computed,
+  WritableSignal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatButtonModule } from '@angular/material/button';
@@ -51,7 +58,11 @@ export class GithubOauth {
   organizations: any[] = [];
   repos: any[] = [];
 
-  displayedColumns: string[] = ['select', 'name', 'repo'];
+  displayedColumns: WritableSignal<string[]> = signal([
+    'select',
+    'name',
+    'repo',
+  ]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -232,10 +243,52 @@ export class GithubOauth {
     const keyword = this.searchKeyword.trim().toLowerCase();
     this.dataSource.filter = keyword;
   }
-
-  onEntityChange() {
+  loadAllOrganizations() {
+    this.loading = true;
+    this.http
+      .get<{ organizations: any[] }>(
+        `http://localhost:3000/api/v1/organizations?userId=${this.userData?.id}`
+      )
+      .subscribe(
+        ({ organizations }) => {
+          this.organizations = organizations;
+          this.displayedColumns.set(Object.keys(organizations[0] || []));
+          console.log('Fetched organizations:', organizations);
+          this.rowData.set([
+            ...this.organizations.map((org) => {
+              return {
+                ...org,
+              };
+            }),
+          ]);
+        },
+        (error) => {
+          console.error('Error fetching organizations:', error);
+          this.loading = false;
+        }
+      );
+  }
+  onEntityChange(event: any) {
     // Fetch new data based on selectedEntity
     // this.fetchDataForEntity(this.selectedEntity);
     console.log('Selected entity:', this.selectedEntity);
+    console.log('entity:', event.target.value);
+    // this.selectedEntity = event;
+
+    switch (this.selectedEntity) {
+      case 'Organizations':
+        this.loadAllOrganizations();
+        break;
+      case 'Repos':
+        this.loadRepos();
+        break;
+      // Add cases for other entities
+      default:
+        this.dataSource.data = []; // fallback
+    }
+  }
+
+  isUrl(value: string): boolean {
+    return typeof value === 'string' && value.startsWith('http');
   }
 }

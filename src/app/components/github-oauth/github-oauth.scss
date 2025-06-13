@@ -63,3 +63,12 @@
   color: #1a0dab;
   margin-left: 5px;
 }
+
+.table-container {
+  overflow-x: auto;
+  width: 100%;
+}
+
+table {
+  min-width: 800px; // Adjust based on your column count
+}
