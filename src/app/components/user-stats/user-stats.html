@@ -1,0 +1,43 @@
+<div
+  *ngIf="dataSource.length > 0"
+  class="mat-elevation-z8"
+  style="overflow-x: auto"
+>
+  <table mat-table [dataSource]="dataSource" class="mat-table">
+    <!-- User Column -->
+    <ng-container matColumnDef="user">
+      <th mat-header-cell *matHeaderCellDef>User</th>
+      <td mat-cell *matCellDef="let element">{{ element.user }}</td>
+    </ng-container>
+
+    <!-- User ID Column -->
+    <ng-container matColumnDef="userId">
+      <th mat-header-cell *matHeaderCellDef>User ID</th>
+      <td mat-cell *matCellDef="let element">{{ element.userId }}</td>
+    </ng-container>
+
+    <!-- Total Commits Column -->
+    <ng-container matColumnDef="totalCommits">
+      <th mat-header-cell *matHeaderCellDef>Total Commits</th>
+      <td mat-cell *matCellDef="let element">{{ element.totalCommits }}</td>
+    </ng-container>
+
+    <!-- Total Pull Requests Column -->
+    <ng-container matColumnDef="totalPullRequests">
+      <th mat-header-cell *matHeaderCellDef>Total PRs</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.totalPullRequests }}
+      </td>
+    </ng-container>
+
+    <!-- Total Issues Column -->
+    <ng-container matColumnDef="totalIssues">
+      <th mat-header-cell *matHeaderCellDef>Total Issues</th>
+      <td mat-cell *matCellDef="let element">{{ element.totalIssues }}</td>
+    </ng-container>
+
+    <!-- Header & Row Definitions -->
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+</div>

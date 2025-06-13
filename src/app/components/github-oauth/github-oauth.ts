@@ -1,17 +1,15 @@
-import { Component, ViewChild, signal, effect } from '@angular/core';
+import { Component, ViewChild, signal, effect, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DatePipe } from '@angular/common';
-
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { UserStats } from '../user-stats/user-stats';
+
 @Component({
   selector: 'app-github-oauth',
   standalone: true,
@@ -22,10 +20,10 @@ import { HttpClient } from '@angular/common/http';
     MatTableModule,
     MatPaginatorModule,
     MatCheckboxModule,
+    UserStats,
   ],
   templateUrl: './github-oauth.html',
   styleUrls: ['./github-oauth.scss'],
-  providers: [DatePipe],
 })
 export class GithubOauth {
   constructor(
@@ -34,59 +32,29 @@ export class GithubOauth {
     private readonly http: HttpClient
   ) {
     effect(() => {
-      this.dataSource.data = this.rowData(); // auto-updates table
+      this.dataSource.data = this.rowData();
     });
   }
+
   isAuthenticated = false;
   loading = false;
 
   userData: any = null;
-  userStats: any = null;
+  userStats: any = [];
 
   rowData = signal<any[]>([]);
-
-  columnDefs = [
-    { field: 'name', headerName: 'Project Name' },
-    { field: 'repo', headerName: 'Repository URL' },
-  ];
-  displayedColumns: string[] = ['select', 'name', 'repo'];
   dataSource = new MatTableDataSource<any>([]);
   selection: any[] = [];
+
   organizations: any[] = [];
   repos: any[] = [];
+
+  displayedColumns: string[] = ['select', 'name', 'repo'];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
-  }
-
-  toggleSelection(row: any) {
-    const index = this.selection.indexOf(row);
-    if (index >= 0) {
-      this.selection.splice(index, 1);
-    } else {
-      this.selection.push(row);
-    }
-  }
-
-  isAllSelected() {
-    return this.selection.length === this.rowData.length;
-  }
-
-  isIndeterminate() {
-    return this.selection.length > 0 && !this.isAllSelected();
-  }
-
-  toggleAll(event: any) {
-    if (event.checked) {
-      this.selection = [...this.rowData()];
-    } else {
-      this.selection = [];
-    }
-  }
-  login() {
-    this.authService.login();
   }
 
   ngOnInit() {
@@ -95,23 +63,19 @@ export class GithubOauth {
       if (userId) {
         this.authService.checkAuthStatus(userId).subscribe(
           (response) => {
-            console.log('Auth status response:', response);
             this.isAuthenticated = response.isAuthenticated;
             this.userData = response.user;
             if (this.isAuthenticated) {
               this.loadOrganizations();
             }
-            return;
           },
           (error) => {
             console.error('Error checking auth status:', error.message);
             this.isAuthenticated = false;
-            return;
           }
         );
       } else {
         this.isAuthenticated = false;
-        return;
       }
     });
   }
@@ -124,17 +88,19 @@ export class GithubOauth {
       )
       .subscribe(
         ({ organizations }) => {
-          console.log('Fetched organizations:', organizations);
           this.organizations = organizations;
           this.loadRepos();
         },
         (error) => {
           console.error('Error fetching organizations:', error);
+          this.loading = false;
         }
       );
   }
 
   loadRepos() {
+    this.loading = true;
+    let remaining = this.organizations.length;
     this.organizations.forEach((org) => {
       this.http
         .get<{ repos: any[] }>(
@@ -142,50 +108,104 @@ export class GithubOauth {
         )
         .subscribe(
           ({ repos }) => {
-            console.log('Fetched repos for org:', org.login, repos);
             repos.forEach((repo) => {
               repo.organization = org.login;
               repo.included = false;
+              repo.repo = `https://github.com/${repo.fullName}`;
             });
             this.repos.push(...repos);
-            this.rowData.set([...this.repos]);
-            this.loading = false;
+            if (--remaining === 0) {
+              this.rowData.set([...this.repos]);
+              this.loading = false;
+            }
           },
           (error) => {
             console.error('Error fetching repos:', error);
-            this.loading = false;
+            if (--remaining === 0) this.loading = false;
           }
         );
     });
   }
 
+  login() {
+    this.authService.login();
+  }
+
   removeGithub() {
-    if (this.userData && this.userData.id) {
+    if (this.userData?.id) {
       this.authService.removeGithubConnection(this.userData.id).subscribe(
         ({ redirectUrl }) => {
-          console.log('Successfully removed GitHub connection:', redirectUrl);
           this.isAuthenticated = false;
           this.repos = [];
+          this.rowData.set([]);
           this.organizations = [];
           this.userData = null;
-          this.rowData.set([]);
-          // After successful deletion, redirect user to GitHub app revocation page
+          this.selection = [];
           if (redirectUrl) window.location.href = redirectUrl;
         },
         (error) => {
           console.error('Failed to remove GitHub connection:', error);
         }
       );
-    } else {
-      console.error('User data or user ID not available.');
     }
   }
 
-  onGridReady(event: any) {
-    // Handle grid ready
+  toggleSelection(row: any) {
+    const idx = this.selection.findIndex((r) => r.githubId === row.githubId);
+    if (idx >= 0) {
+      this.selection.splice(idx, 1);
+    } else {
+      this.selection.push(row);
+    }
+    this.fetchRepoDetailsBatch();
   }
 
-  onCellValueChanged(event: any) {
-    // Handle row selection change
+  isSelected(row: any) {
+    return this.selection.some((r) => r.githubId === row.githubId);
+  }
+
+  isAllSelected() {
+    return this.selection.length === this.rowData().length;
+  }
+
+  isIndeterminate() {
+    const total = this.rowData().length;
+    const selected = this.selection.length;
+    return selected > 0 && selected < total;
+  }
+
+  toggleAll(event: any) {
+    if (event.checked) {
+      this.selection = [...this.rowData()];
+    } else {
+      this.selection = [];
+    }
+    this.fetchRepoDetailsBatch();
+  }
+
+  fetchRepoDetailsBatch() {
+    const selectedRepoIds = this.selection.map((repo) => repo._id);
+    if (selectedRepoIds.length === 0) {
+      this.userStats = [];
+      return;
+    }
+
+    this.loading = true;
+    this.http
+      .post<any>('http://localhost:3000/api/v1/repositories/sync', {
+        repoIds: selectedRepoIds,
+        userId: this.userData?.id,
+      })
+      .subscribe(
+        (data) => {
+          console.log('Batch repo data:', data);
+          this.userStats = data;
+          this.loading = false;
+        },
+        (error) => {
+          console.error('Error fetching batch repo details:', error);
+          this.loading = false;
+        }
+      );
   }
 }
