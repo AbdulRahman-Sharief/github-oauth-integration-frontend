@@ -1,5 +1,5 @@
 <div class="d-flex justify-content-center mt-4">
-  <mat-expansion-panel class="w-50">
+  <mat-expansion-panel class="w-80">
     <mat-expansion-panel-header>
       <mat-panel-title>
         <div class="d-flex justify-content-between align-items-center w-100">
@@ -51,6 +51,45 @@
           </div>
         </div>
       </div>
+      <!-- Controls above the table -->
+      <div class="container mb-3">
+        <div class="row align-items-end">
+          <!-- Active Integrations Dropdown -->
+          <div class="col-md-4">
+            <label class="form-label">Active Integration</label>
+            <select class="form-control" [(ngModel)]="selectedIntegration">
+              <option value="github">GitHub</option>
+              <!-- Add more options if needed -->
+            </select>
+          </div>
+
+          <!-- Entity Dropdown -->
+          <div class="col-md-4">
+            <label class="form-label">Entity</label>
+            <select
+              class="form-control"
+              [(ngModel)]="selectedEntity"
+              (change)="onEntityChange()"
+            >
+              <option *ngFor="let entity of githubEntities" [value]="entity">
+                {{ entity }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Search Input -->
+          <div class="col-md-4">
+            <label class="form-label">Search</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search..."
+              [(ngModel)]="searchKeyword"
+              (input)="applyFilter()"
+            />
+          </div>
+        </div>
+      </div>
       <div class="mat-elevation-z8">
         <table mat-table [dataSource]="dataSource" class="w-100">
           <!-- Checkbox Column -->
@@ -89,17 +128,17 @@
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
       </div>
+      <app-user-stats
+        *ngIf="!loading && isAuthenticated"
+        [userData]="userStats"
+      ></app-user-stats>
+      <!-- Optional Pagination -->
+      <mat-paginator
+        [pageSizeOptions]="[5, 10, 20]"
+        showFirstLastButtons
+      ></mat-paginator>
     </div>
 
-    <app-user-stats
-      *ngIf="!loading && isAuthenticated"
-      [userData]="userStats"
-    ></app-user-stats>
-    <!-- Optional Pagination -->
-    <mat-paginator
-      [pageSizeOptions]="[5, 10, 20]"
-      showFirstLastButtons
-    ></mat-paginator>
     <div class="d-flex justify-content-end" *ngIf="isAuthenticated">
       <button class="btn btn-indigo mt-3" (click)="removeGithub()">
         Remove

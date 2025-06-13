@@ -9,12 +9,14 @@ import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { UserStats } from '../user-stats/user-stats';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-github-oauth',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatExpansionModule,
     MatButtonModule,
     MatTableModule,
@@ -207,5 +209,33 @@ export class GithubOauth {
           this.loading = false;
         }
       );
+  }
+
+  // Dropdown options
+  githubEntities = [
+    'Repos',
+    'Organizations',
+    'OrganizationMembers',
+    'PullRequests',
+    'Issues',
+    'Commits',
+    'ChangeLogs',
+    'Users',
+  ];
+
+  selectedIntegration = 'github';
+  selectedEntity = 'Repos'; // default entity
+  searchKeyword = '';
+
+  // Filtering and Entity Change Handlers
+  applyFilter() {
+    const keyword = this.searchKeyword.trim().toLowerCase();
+    this.dataSource.filter = keyword;
+  }
+
+  onEntityChange() {
+    // Fetch new data based on selectedEntity
+    // this.fetchDataForEntity(this.selectedEntity);
+    console.log('Selected entity:', this.selectedEntity);
   }
 }
