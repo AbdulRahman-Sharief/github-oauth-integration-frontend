@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DatePipe } from '@angular/common';
 
@@ -32,25 +32,25 @@ export class GithubOauth {
     private readonly authService: AuthService,
     private readonly route: ActivatedRoute,
     private readonly http: HttpClient
-  ) {}
+  ) {
+    effect(() => {
+      this.dataSource.data = this.rowData(); // auto-updates table
+    });
+  }
   isAuthenticated = false;
   loading = false;
 
   userData: any = null;
   userStats: any = null;
 
-  rowData = [
-    // Example data structure, replace with actual GitHub project data
-    { name: 'Project A', repo: 'github.com/user/project-a' },
-    { name: 'Project B', repo: 'github.com/user/project-b' },
-  ];
+  rowData = signal<any[]>([]);
 
   columnDefs = [
     { field: 'name', headerName: 'Project Name' },
     { field: 'repo', headerName: 'Repository URL' },
   ];
   displayedColumns: string[] = ['select', 'name', 'repo'];
-  dataSource = new MatTableDataSource(this.rowData);
+  dataSource = new MatTableDataSource<any>([]);
   selection: any[] = [];
   organizations: any[] = [];
   repos: any[] = [];
@@ -80,7 +80,7 @@ export class GithubOauth {
 
   toggleAll(event: any) {
     if (event.checked) {
-      this.selection = [...this.rowData];
+      this.selection = [...this.rowData()];
     } else {
       this.selection = [];
     }
@@ -144,7 +144,7 @@ export class GithubOauth {
               repo.included = false;
             });
             this.repos.push(...repos);
-            this.rowData = [...this.repos];
+            this.rowData.set([...this.repos]);
             this.loading = false;
           },
           (error) => {
@@ -164,7 +164,7 @@ export class GithubOauth {
           this.repos = [];
           this.organizations = [];
           this.userData = null;
-          this.rowData = [];
+          this.rowData.set([]);
           // After successful deletion, redirect user to GitHub app revocation page
           if (redirectUrl) window.location.href = redirectUrl;
         },
