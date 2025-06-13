@@ -17,7 +17,7 @@ import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { UserStats } from '../user-stats/user-stats';
 import { FormsModule } from '@angular/forms';
-
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 @Component({
   selector: 'app-github-oauth',
   standalone: true,
@@ -30,6 +30,7 @@ import { FormsModule } from '@angular/forms';
     MatPaginatorModule,
     MatCheckboxModule,
     UserStats,
+    MatProgressSpinnerModule,
   ],
   templateUrl: './github-oauth.html',
   styleUrls: ['./github-oauth.scss'],
@@ -260,6 +261,8 @@ export class GithubOauth {
               };
             }),
           ]);
+
+          this.loading = false;
         },
         (error) => {
           console.error('Error fetching organizations:', error);
@@ -270,6 +273,7 @@ export class GithubOauth {
 
   loadAllRepos() {
     this.loading = true;
+    const allRepos: any[] = [];
     this.http
       .get<{ organizations: any[] }>(
         `http://localhost:3000/api/v1/organizations?userId=${this.userData?.id}`
@@ -289,9 +293,10 @@ export class GithubOauth {
                     repo.included = false;
                     repo.repo = `https://github.com/${repo.fullName}`;
                   });
-                  this.repos.push(...repos);
+                  allRepos.push(...repos);
                   if (--remaining === 0) {
-                    this.rowData.set([...this.repos]);
+                    this.rowData.set([...allRepos]);
+                    this.displayedColumns.set(Object.keys(allRepos[0] || []));
                     this.loading = false;
                   }
                 },

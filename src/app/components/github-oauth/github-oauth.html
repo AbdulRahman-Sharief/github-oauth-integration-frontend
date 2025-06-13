@@ -1,4 +1,4 @@
-<div class="d-flex justify-content-center mt-4">
+<div class="d-flex justify-content-center mt-4 pt-4">
   <mat-expansion-panel class="w-80">
     <mat-expansion-panel-header>
       <mat-panel-title>
@@ -27,7 +27,7 @@
 
     <div class="d-flex justify-content-center">
       <div *ngIf="!isAuthenticated" class="text-center p-3 w-100">
-        <button class="btn btn-indigo mb-3 w-25" (click)="login()">
+        <button class="btn btn-indigo mb-3 w-30" (click)="login()">
           Connect
         </button>
         <p class="mb-0 text-indigo fw-bold fs-4">Connect Sredio to GitHub</p>
@@ -38,15 +38,15 @@
       <div class="container mt-3">
         <div class="row">
           <div class="col">
-            <span class="title">Github Projects</span>
+            <span class="title">Github Data</span>
             <i class="fas fa-arrow-down icon"></i>
           </div>
         </div>
         <div class="row mb-3">
           <div class="col">
             <span class="subtitle"
-              >Specify which projects we should pull from when synchronizing
-              data into Sredio.</span
+              >Specify which Entity we should pull from when synchronizing data
+              into Sredio.</span
             >
           </div>
         </div>
@@ -91,6 +91,9 @@
         </div>
       </div>
       <div class="mat-elevation-z8 table-container">
+        <div *ngIf="loading" class="d-flex justify-content-center my-4">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
         <table mat-table [dataSource]="dataSource" class="w-100">
           <!-- Dynamic Column Definitions -->
           <ng-container
