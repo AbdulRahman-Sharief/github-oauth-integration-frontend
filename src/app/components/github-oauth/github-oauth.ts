@@ -417,7 +417,13 @@ export class GithubOauth {
     }
   }
 
-  isUrl(value: string): boolean {
-    return typeof value === 'string' && value.startsWith('http');
+  isUrl(value: any): boolean {
+    if (typeof value !== 'string') return false;
+    try {
+      const url = new URL(value);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+      return false;
+    }
   }
 }

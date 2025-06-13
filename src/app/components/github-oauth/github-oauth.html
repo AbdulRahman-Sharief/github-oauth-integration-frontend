@@ -101,6 +101,7 @@
             <td mat-cell *matCellDef="let row">
               <!-- Special handling for URLs and images -->
               <ng-container [ngSwitch]="column">
+                <!-- Avatar case -->
                 <a
                   *ngSwitchCase="'avatar_url'"
                   [href]="row[column]"
@@ -113,16 +114,23 @@
                     height="30"
                   />
                 </a>
-                <a *ngSwitchCase="'url'" [href]="row[column]" target="_blank"
-                  >{{ row[column] }}</a
-                >
-                <a
-                  *ngSwitchDefault
-                  [href]="isUrl(row[column]) ? row[column] : null"
-                  target="_blank"
-                >
+
+                <!-- URL case -->
+                <a *ngSwitchCase="'url'" [href]="row[column]" target="_blank">
                   {{ row[column] }}
                 </a>
+
+                <!-- Default: conditionally render a link only if it's a URL -->
+                <ng-container *ngSwitchDefault>
+                  <ng-container *ngIf="isUrl(row[column]); else plainText">
+                    <a [href]="row[column]" target="_blank"
+                      >{{ row[column] }}</a
+                    >
+                  </ng-container>
+                  <ng-template #plainText>
+                    <span>{{ row[column] }}</span>
+                  </ng-template>
+                </ng-container>
               </ng-container>
             </td>
           </ng-container>
