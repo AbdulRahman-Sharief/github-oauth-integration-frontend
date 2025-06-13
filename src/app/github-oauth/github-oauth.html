@@ -1,0 +1,111 @@
+<div class="d-flex justify-content-center mt-4">
+  <mat-expansion-panel class="w-50">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <div class="d-flex justify-content-between align-items-center w-100">
+          <div class="d-flex align-items-center">
+            <img
+              src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+              alt="GitHub Logo"
+              style="width: 30px; height: 30px; margin-right: 10px"
+            />
+            GitHub
+            <span *ngIf="isAuthenticated" class="ml-2 success-tick"
+              >&#10003;</span
+            >
+          </div>
+          <div *ngIf="isAuthenticated" class="admin-sync">
+            <span
+              >Admin: Last Synced: {{ userData?.connectedAt | date :
+              "dd/MM/yyyy, h:mm a" }}</span
+            >
+            <span class="sync-type">Sync Type: full</span>
+          </div>
+        </div>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+
+    <div class="d-flex justify-content-center">
+      <div *ngIf="!isAuthenticated" class="text-center p-3 w-100">
+        <button class="btn btn-indigo mb-3 w-25" (click)="login()">
+          Connect
+        </button>
+        <p class="mb-0 text-indigo fw-bold fs-4">Connect Sredio to GitHub</p>
+      </div>
+    </div>
+
+    <div class="mt-4" *ngIf="isAuthenticated">
+      <div class="container mt-3">
+        <div class="row">
+          <div class="col">
+            <span class="title">Github Projects</span>
+            <i class="fas fa-arrow-down icon"></i>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col">
+            <span class="subtitle"
+              >Specify which projects we should pull from when synchronizing
+              data into Sredio.</span
+            >
+          </div>
+        </div>
+      </div>
+      <div class="mat-elevation-z8">
+        <table mat-table [dataSource]="dataSource" class="w-100">
+          <!-- Checkbox Column -->
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-checkbox
+                (change)="toggleAll($event)"
+                [checked]="isAllSelected()"
+                [indeterminate]="isIndeterminate()"
+              ></mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let row">
+              <mat-checkbox
+                (click)="$event.stopPropagation()"
+                (change)="toggleSelection(row)"
+                [checked]="selection.includes(row)"
+              >
+              </mat-checkbox>
+            </td>
+          </ng-container>
+
+          <!-- Example Column 1: Project Name -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+          </ng-container>
+
+          <!-- Example Column 2: Repository URL -->
+          <ng-container matColumnDef="repo">
+            <th mat-header-cell *matHeaderCellDef>Repository</th>
+            <td mat-cell *matCellDef="let element">{{ element.repo }}</td>
+          </ng-container>
+
+          <!-- Header and Row Declarations -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <!-- Optional Pagination -->
+        <mat-paginator
+          [pageSizeOptions]="[5, 10, 20]"
+          showFirstLastButtons
+        ></mat-paginator>
+      </div>
+    </div>
+
+    <!-- <app-user-stats
+      *ngIf="!loading && isAuthenticated"
+      [userData]="userStats"
+    ></app-user-stats> -->
+
+    <div class="d-flex justify-content-end" *ngIf="isAuthenticated">
+      <button class="btn btn-primary mt-3" (click)="removeGithub()">
+        Remove
+      </button>
+    </div>
+  </mat-expansion-panel>
+</div>
