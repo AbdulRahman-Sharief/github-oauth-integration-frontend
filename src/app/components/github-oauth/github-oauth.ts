@@ -275,32 +275,66 @@ export class GithubOauth {
   loadAllRepos() {
     this.loading = true;
     const allRepos: any[] = [];
+
     this.http
       .get<{ organizations: any[] }>(
         `http://localhost:3000/api/v1/organizations?userId=${this.userData?.id}`
       )
       .subscribe(
         ({ organizations }) => {
-          let remaining = this.organizations.length;
-          this.organizations.forEach((org) => {
+          this.organizations = organizations;
+          let remaining = organizations.length;
+
+          organizations.forEach((org) => {
             this.http
               .get<{ repos: any[] }>(
                 `http://localhost:3000/api/v1/organizations/repositories?organizationId=${org._id}&userId=${this.userData?.id}`
               )
               .subscribe(
                 ({ repos }) => {
-                  repos.forEach((repo) => {
-                    repo.organization = org.login;
-                    repo.included = false;
-                    repo.repo = `https://github.com/${repo.fullName}`;
-                  });
-                  allRepos.push(...repos);
-                  if (--remaining === 0) {
-                    this.rowData.set([...allRepos]);
-                    this.displayedColumns.set(Object.keys(allRepos[0] || []));
-                    this.dataSource.paginator = this.paginator;
-                    this.loading = false;
-                  }
+                  const repoIds = repos.map((repo) => repo._id);
+
+                  this.http
+                    .post<any[]>(
+                      'http://localhost:3000/api/v1/repositories/sync',
+                      {
+                        repoIds,
+                        userId: this.userData?.id,
+                      }
+                    )
+                    .subscribe(
+                      (syncData) => {
+                        repos.forEach((repo) => {
+                          repo.organization = org.login;
+                          repo.included = false;
+                          repo.repo = `https://github.com/${repo.fullName}`;
+
+                          const synced = syncData.find(
+                            (s) => s.repoGitHubId === repo.githubId
+                          );
+                          if (synced) {
+                            repo.commits = synced.totalCommits;
+                            repo.pullRequests = synced.totalPullRequests;
+                            repo.issues = synced.totalIssues;
+                          }
+                        });
+
+                        allRepos.push(...repos);
+
+                        if (--remaining === 0) {
+                          this.rowData.set([...allRepos]);
+                          this.displayedColumns.set(
+                            Object.keys(allRepos[0] || {})
+                          );
+                          this.dataSource.paginator = this.paginator;
+                          this.loading = false;
+                        }
+                      },
+                      (error) => {
+                        console.error('Error syncing repo data:', error);
+                        if (--remaining === 0) this.loading = false;
+                      }
+                    );
                 },
                 (error) => {
                   console.error('Error fetching repos:', error);
@@ -315,6 +349,7 @@ export class GithubOauth {
         }
       );
   }
+
   loadAllCommits() {
     this.loading = true;
     this.http
