@@ -368,6 +368,7 @@ export class GithubOauth {
                               this.displayedColumns.set(
                                 Object.keys(allCommits[0] || [])
                               );
+                              this.dataSource.paginator = this.paginator;
                               this.loading = false;
                             }
                           },
